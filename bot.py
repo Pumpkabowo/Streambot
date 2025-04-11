@@ -70,7 +70,14 @@ async def check_streams():
                         embed = discord.Embed(
                             title=f"{streamer['twitch']} is now LIVE!",
                             url=f"https://twitch.tv/{streamer['twitch']}",
-                            description=f"Playing: **{game}**\nWith: **{viewers} viewers**\n\n**{title}**\n\n{streamer['message']}",
+                            description=(
+                                f"{streamer['message']}\n\n"
+                                f"[**{title}**](https://twitch.tv/{streamer['twitch']})\n\n"
+                                f"Playing: **{game}**\n"
+                                f"With: **{viewers}**\n\n"
+                                
+                                
+                            ),
                             color=0x9146FF
                         )
                         embed.set_image(url=f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{streamer['twitch']}-440x248.jpg?rand={os.urandom(4).hex()}")
@@ -92,18 +99,18 @@ async def check_streams():
 @bot.event
 async def on_ready():
     await load_streamers()
-    guild = discord.Object(id= SERVER-ID) # Replace with server ID
+    guild = discord.Object(id=REPLACE-WITH-SERVER-ID)  # Replace with your server ID
     try:
         await bot.tree.sync(guild=guild)
         print("✅ Slash commands re-synced to guild.")
     except Exception as e:
         print("❌ Failed to sync commands:", e)
     bot.loop.create_task(check_streams())
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="for streams 👀"))
     print(f"Logged in as {bot.user} | Slash commands synced to specific server.")
 
 # SLASH COMMANDS
 @bot.tree.command(name="twitchadd", description="Add a streamer to list")
+@app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(username="Twitch username", message="Custom message for the alert")
 async def twitchadd(interaction: discord.Interaction, username: str, message: str):
     streamers.append({
@@ -116,6 +123,7 @@ async def twitchadd(interaction: discord.Interaction, username: str, message: st
     await interaction.response.send_message(f"✅ Added `{username}` with message: {message}")
 
 @bot.tree.command(name="twitchremove", description="Remove a Twitch streamer from the list")
+@app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(username="Twitch username to remove")
 async def twitchremove(interaction: discord.Interaction, username: str):
     before = len(streamers)
@@ -128,15 +136,19 @@ async def twitchremove(interaction: discord.Interaction, username: str):
         await interaction.response.send_message(f"⚠️ `{username}` was not found.")
 
 @bot.tree.command(name="twitchlist", description="Lists all streamers that are on the list")
+@app_commands.checks.has_permissions(administrator=True)
 async def twitchlist(interaction: discord.Interaction):
     if not streamers:
-        await interaction.response.send_message("📭 There are no streamers on the list")
+        await interaction.response.send_message("📋 There are no streamers on the list")
     else:
         msg = "\n".join([f"- **{s['twitch']}** in <#{s['discord_channel']}>: {s['message']}" for s in streamers])
         await interaction.response.send_message(f"📺 Currently tracking:\n{msg}")
 
 @bot.tree.command(name="pingme", description="Test command to confirm the bot is responsive.")
+@app_commands.checks.has_permissions(administrator=True)
 async def pingme(interaction: discord.Interaction):
-    await interaction.response.send_message("✅ Pong!")
+    await interaction.response.send_message("✅ Pong! Bot is alive and slash commands work!")
 
 bot.run(DISCORD_TOKEN)
+
+
